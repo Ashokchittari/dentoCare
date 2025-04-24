@@ -36,11 +36,13 @@ cd dentocare
 
 2. Install backend dependencies:
 ```bash
+cd backend
 npm install
 ```
 
 3. Install frontend dependencies:
 ```bash
+cd frontend
 cd client
 npm install
 ```
@@ -61,11 +63,13 @@ mkdir uploads
 
 1. Start the backend server:
 ```bash
+cd backend
 npm run dev
 ```
 
 2. Start the frontend development server:
 ```bash
+cd frontend
 cd client
 npm start
 ```
