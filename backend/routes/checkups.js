@@ -6,7 +6,7 @@ const PDFDocument = require('pdfkit');
 const Checkup = require('../models/Checkup');
 const auth = require('../middleware/auth');
 
-
+// Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
@@ -18,6 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Create new checkup request
 router.post('/', auth, async (req, res) => {
     try {
         const { dentistId } = req.body;
@@ -33,7 +34,7 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
-
+// Get all checkups for a patient
 router.get('/patient', auth, async (req, res) => {
     try {
         const checkups = await Checkup.find({ patient: req.user.id })
@@ -45,7 +46,7 @@ router.get('/patient', auth, async (req, res) => {
     }
 });
 
-
+// Get all checkups for a dentist
 router.get('/dentist', auth, async (req, res) => {
     try {
         const checkups = await Checkup.find({ dentist: req.user.id })
@@ -57,7 +58,7 @@ router.get('/dentist', auth, async (req, res) => {
     }
 });
 
-
+// Get single checkup
 router.get('/:id', auth, async (req, res) => {
     try {
         const checkup = await Checkup.findById(req.params.id)
@@ -68,7 +69,7 @@ router.get('/:id', auth, async (req, res) => {
             return res.status(404).json({ message: 'Checkup not found' });
         }
 
-        
+        // Check if user is authorized to view this checkup
         if (checkup.patient._id.toString() !== req.user.id && 
             checkup.dentist._id.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
@@ -81,7 +82,7 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
-
+// Upload images and add notes for a checkup
 router.post('/:id/images', auth, upload.array('images', 5), async (req, res) => {
     try {
         const { descriptions } = req.body;
@@ -91,11 +92,12 @@ router.post('/:id/images', auth, upload.array('images', 5), async (req, res) => 
             return res.status(404).json({ message: 'Checkup not found' });
         }
 
-        
+        // Check if user is authorized to upload images
         if (checkup.dentist.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
+        // Add images with descriptions
         const images = req.files.map((file, index) => ({
             url: file.path,
             description: descriptions && descriptions[index] ? descriptions[index] : ''
@@ -111,7 +113,7 @@ router.post('/:id/images', auth, upload.array('images', 5), async (req, res) => 
     }
 });
 
-
+// Update checkup status and notes
 router.put('/:id', auth, async (req, res) => {
     try {
         const { status, notes } = req.body;
@@ -121,7 +123,7 @@ router.put('/:id', auth, async (req, res) => {
             return res.status(404).json({ message: 'Checkup not found' });
         }
 
-
+        // Check if user is authorized to update
         if (checkup.dentist.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
@@ -138,7 +140,7 @@ router.put('/:id', auth, async (req, res) => {
     }
 });
 
-
+// Export checkup as PDF
 router.get('/:id/export', auth, async (req, res) => {
     try {
         const checkup = await Checkup.findById(req.params.id)
@@ -149,7 +151,7 @@ router.get('/:id/export', auth, async (req, res) => {
             return res.status(404).json({ message: 'Checkup not found' });
         }
 
-        
+        // Check if user is authorized to export
         if (checkup.patient._id.toString() !== req.user.id && 
             checkup.dentist._id.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
@@ -160,7 +162,7 @@ router.get('/:id/export', auth, async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename=checkup-${checkup._id}.pdf`);
         doc.pipe(res);
 
-        
+        // Add content to PDF
         doc.fontSize(20).text('Dental Checkup Report', { align: 'center' });
         doc.moveDown();
         
@@ -190,21 +192,21 @@ router.get('/:id/export', auth, async (req, res) => {
             doc.moveDown();
             
             for (const image of checkup.images) {
-                
+                // Add image description
                 doc.fontSize(12).text(`Description: ${image.description}`);
                 
-                
+                // Add the actual image
                 try {
-                    
+                    // Get the absolute path to the image
                     const imagePath = path.join(__dirname, '..', image.url);
                     
-                    
+                    // Add image to PDF with a maximum width of 500 points
                     doc.image(imagePath, {
                         fit: [500, 400],
                         align: 'center'
                     });
                     
-                    
+                    // Add upload date
                     doc.fontSize(10).text(`Uploaded: ${new Date(image.uploadedAt).toLocaleString()}`);
                     doc.moveDown(2);
                 } catch (error) {

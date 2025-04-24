@@ -5,12 +5,12 @@ const dotenv = require('dotenv');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
-
+// Load environment variables
 dotenv.config();
 
 const app = express();
 
-
+// Middleware
 app.use(cookieParser());
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -19,6 +19,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://chittariashok456:<db_password>@cluster0.bhp2hpw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -26,12 +27,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://chittariashok456:<db_
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.error('MongoDB Connection Error:', err));
 
-
+// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/checkups', require('./routes/checkups'));
 
-
+// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Something went wrong!' });

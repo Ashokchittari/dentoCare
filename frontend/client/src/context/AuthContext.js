@@ -69,10 +69,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
+  const register = async (name, email, password, role) => {
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:5000/api/auth/register', userData);
+      const res = await axios.post('http://localhost:5000/api/auth/register', {
+        name,
+        email,
+        password,
+        role
+      });
       setUser(res.data.user);
       setError(null);
       return { success: true };
